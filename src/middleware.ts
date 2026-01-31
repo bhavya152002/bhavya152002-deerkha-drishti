@@ -7,7 +7,9 @@ export function middleware(request: NextRequest) {
 
     // 1. If user is on login page and HAS token -> Redirect to Dashboard
     if (pathname === '/login' && token) {
-        return NextResponse.redirect(new URL('/', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        return NextResponse.redirect(url);
     }
 
     // 2. If user is NOT on login page AND trying to access protected routes (dashboard/camera) AND matches protection logic
@@ -15,12 +17,16 @@ export function middleware(request: NextRequest) {
     const isProtectedPath = pathname === '/' || pathname.startsWith('/camera');
 
     if (isProtectedPath && !token) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
     }
 
     // 3. Admin protection
     if (pathname === '/admin' && !token) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
     }
 
     return NextResponse.next();

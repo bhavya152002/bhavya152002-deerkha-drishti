@@ -37,7 +37,8 @@ export default function LoginPage() {
                 console.log("Login successful, redirecting...");
 
                 // Force hard navigation to trigger middleware check freshly
-                window.location.href = '/';
+                const prefix = process.env.NODE_ENV === 'production' ? '/app' : '';
+                window.location.href = `${prefix}/`;
             } else {
                 setError(data.error || 'Login failed');
                 setIsLoading(false);

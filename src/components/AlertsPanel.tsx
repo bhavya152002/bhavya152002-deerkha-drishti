@@ -107,7 +107,8 @@ const AlertsPanel = () => {
         document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         // Clear username from local storage
         localStorage.removeItem('username');
-        window.location.href = '/login';
+        const prefix = process.env.NODE_ENV === 'production' ? '/app' : '';
+        window.location.href = `${prefix}/login`;
     };
 
     return (
@@ -132,7 +133,10 @@ const AlertsPanel = () => {
                     </button>
                     {isAdmin && (
                         <button
-                            onClick={() => window.location.href = '/admin'}
+                            onClick={() => {
+                                const prefix = process.env.NODE_ENV === 'production' ? '/app' : '';
+                                window.location.href = `${prefix}/admin`;
+                            }}
                             className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded-lg border border-blue-500/50 transition-colors"
                         >
                             <span>🛠️</span> ADMIN
@@ -142,7 +146,11 @@ const AlertsPanel = () => {
             </div>
 
             {/* Audio element for sound */}
-            <audio ref={audioRef} src="/alert.mp3" preload="auto" />
+            <audio
+                ref={audioRef}
+                src={`${process.env.NODE_ENV === 'production' ? '/app' : ''}/alert.mp3`}
+                preload="auto"
+            />
 
             {/* List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
