@@ -18,6 +18,11 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
+    // 3. Admin protection
+    if (pathname === '/admin' && !token) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     return NextResponse.next();
 }
 

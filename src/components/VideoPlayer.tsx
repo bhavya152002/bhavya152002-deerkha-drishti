@@ -7,6 +7,7 @@ interface VideoPlayerProps {
     url: string;
     title: string;
     index: number;
+    onRename?: (newTitle: string) => void;
 }
 
 const GridPreview = ({ url, backendUrl }: { url: string, backendUrl: string }) => {
@@ -35,13 +36,26 @@ const GridPreview = ({ url, backendUrl }: { url: string, backendUrl: string }) =
     );
 };
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title, index }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title, index, onRename }) => {
     const [hasWindow, setHasWindow] = useState(false);
     const [error, setError] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [localTitle, setLocalTitle] = useState(title);
 
     useEffect(() => {
         setHasWindow(true);
     }, []);
+
+    useEffect(() => {
+        setLocalTitle(title);
+    }, [title]);
+
+    const handleSaveRename = () => {
+        if (localTitle.trim() && localTitle !== title && onRename) {
+            onRename(localTitle);
+        }
+        setIsEditing(false);
+    };
 
     // Domain Sharding to bypass browser 6-connection limit per host
     // We alternate between localhost and 127.0.0.1 to get 6+6 = 12 concurrent streams
@@ -62,14 +76,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, title, index }) => {
     }
 
     return (
-        <div className="flex flex-col gap-2 p-2 bg-gray-800 rounded-lg shadow-lg border border-gray-700 h-full transition-transform hover:scale-[1.02] duration-200">
-            <div className="flex justify-between items-center px-1 mb-1">
-                <Link href={`/camera/${index + 1}?url=${encodeURIComponent(url)}`} className="text-white text-sm font-medium truncate hover:text-blue-400 transition-colors">
-                    {title} ↗
-                </Link>
-                <span className="text-[10px] text-red-400 font-bold animate-pulse flex items-center gap-1">
+        <div className="flex flex-col gap-2 p-2 bg-gray-800 rounded-lg shadow-lg border border-gray-700 h-full transition-transform hover:scale-[1.02] duration-200 group/card">
+            <div className="flex justify-between items-center px-1 mb-1 gap-2">
+                {isEditing ? (
+                    <div className="flex items-center gap-1 flex-1">
+                        <input
+                            autoFocus
+                            value={localTitle}
+                            onChange={(e) => setLocalTitle(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveRename()}
+                            onBlur={() => handleSaveRename()}
+                            className="bg-gray-700 text-white text-xs px-2 py-0.5 rounded border border-blue-500 outline-none w-full"
+                        />
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Link href={`/camera/${index + 1}?url=${encodeURIComponent(url)}`} className="text-white text-sm font-medium truncate hover:text-blue-400 transition-colors">
+                            {title}
+                        </Link>
+                        <button
+                            onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                            className="opacity-0 group-hover/card:opacity-50 hover:!opacity-100 transition-opacity text-[10px] text-gray-400"
+                            title="Rename stream"
+                        >
+                            ✏️
+                        </button>
+                    </div>
+                )}
+                <span className="text-[10px] text-red-400 font-bold animate-pulse flex items-center gap-1 shrink-0">
                     <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                    LIVE (AI)
+                    LIVE
                 </span>
             </div>
 

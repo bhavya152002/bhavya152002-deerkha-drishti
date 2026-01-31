@@ -33,6 +33,7 @@ export default function LoginPage() {
             if (response.ok) {
                 // Set cookie (valid for 1 day)
                 document.cookie = `auth_token=${data.token}; path=/; max-age=86400; SameSite=Strict`;
+                localStorage.setItem('username', data.username);
                 console.log("Login successful, redirecting...");
 
                 // Force hard navigation to trigger middleware check freshly
