@@ -26,6 +26,7 @@ export default function AdminDashboard() {
     const router = useRouter();
 
     const getCookie = (name: string) => {
+        if (typeof document === 'undefined') return null;
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop()?.split(';').shift();
@@ -33,16 +34,23 @@ export default function AdminDashboard() {
     };
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-    const token = getCookie('auth_token');
 
     useEffect(() => {
-        fetchUsers();
+        const token = getCookie('auth_token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
+        fetchUsers(token);
     }, []);
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (token: string | null) => {
+        const activeToken = token || getCookie('auth_token');
+        if (!activeToken) return;
+
         try {
             const res = await fetch(`${backendUrl}/api/admin/users`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${activeToken}` }
             });
             if (res.status === 401 || res.status === 403) {
                 router.push('/login');
@@ -67,7 +75,7 @@ export default function AdminDashboard() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${getCookie('auth_token')}`
                 },
                 body: JSON.stringify({
                     username: newUsername,
@@ -82,7 +90,7 @@ export default function AdminDashboard() {
                 setNewUsername('');
                 setNewPassword('');
                 setStreamInput('');
-                fetchUsers();
+                fetchUsers(null);
             } else {
                 setError(data.error || "Failed to create user");
             }
@@ -101,7 +109,7 @@ export default function AdminDashboard() {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${getCookie('auth_token')}`
                 },
                 body: JSON.stringify({
                     assigned_streams: editUser.assigned_streams,
@@ -110,7 +118,7 @@ export default function AdminDashboard() {
             });
             if (res.ok) {
                 setEditUser(null);
-                fetchUsers();
+                fetchUsers(null);
             } else {
                 const data = await res.json();
                 setError(data.error || "Failed to update user");
@@ -127,10 +135,10 @@ export default function AdminDashboard() {
         try {
             const res = await fetch(`${backendUrl}/api/admin/users/${userId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${getCookie('auth_token')}` }
             });
             if (res.ok) {
-                fetchUsers();
+                fetchUsers(null);
             }
         } catch (err) {
             console.error(err);
